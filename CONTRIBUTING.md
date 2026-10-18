@@ -1,5 +1,5 @@
 # Contributing to InovaCC
-<!-- rev:001 (RFC 3339) 2026-10-17T22:40:00Z -->
+<!-- rev:001 (RFC 3339) 2026-10-17T22:39:55Z -->
 
 These rules apply to every repository of the `inovacc-core` organization and to every contributor: people and AI
 agents alike. A repository's own `CONTRIBUTING.md` adds its build and test commands and may make a rule stricter, never

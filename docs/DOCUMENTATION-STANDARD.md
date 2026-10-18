@@ -1,5 +1,5 @@
 # Documentation standard
-<!-- rev:001 (RFC 3339) 2026-10-17T22:40:00Z -->
+<!-- rev:001 (RFC 3339) 2026-10-17T22:39:55Z -->
 
 Operator, 2026-10-17: *"Todos los proyectos tienen que ser documentados. Cada worker, cada container, cada lógica tiene
 que tener su carpeta, docs, documentado, con su ADR, books, findings, roadmap, milestone, todo lo que se necesite."* This

@@ -1,5 +1,5 @@
 # Security policy
-<!-- rev:001 (RFC 3339) 2026-10-17T22:40:00Z -->
+<!-- rev:001 (RFC 3339) 2026-10-17T22:39:55Z -->
 
 ## Reporting a vulnerability
 
