@@ -1,5 +1,5 @@
 # Platform backlog
-<!-- rev:002 (RFC 3339) 2026-11-14T13:56:16Z -->
+<!-- rev:003 (RFC 3339) 2026-11-15T12:02:42Z -->
 
 Planned work that spans the whole inovacc-core platform rather than one repository. Work owned by one domain stays in
 that repository's own `docs/BACKLOG.md`; a row here moves there once its owner is decided.
@@ -8,6 +8,7 @@ that repository's own `docs/BACKLOG.md`; a row here moves there once its owner i
 |---|---|---|---|
 | BL-001 | A feature-flag system for the whole platform: one way for every Worker, container, console and client of every inovacc-core repository to turn a capability on or off (per environment, organisation, application or user) without a release | Operator, 2026-10-29: "un sistema de feature flags para toda la plataforma ... va a atravesar toda la plataforma ... después vemos cómo va a ser la implementación ... después hacemos el brainstorm" | Open: design not started; waits on a brainstorm with the operator (owner domain, storage, evaluation, SDK, console, audit) |
 | BL-002 | A store for the cloud copy of an application's master key: for one signed-in account and one pair of product and profile, the platform keeps one 119-byte sealed container that it cannot open, replaced in two steps (stage, read back, commit) | Operator, 2026-11-14: "salvar una copia de la credencial en la nube. La nube sería mi plataforma", "ni la plataforma sepa cómo descriptografiarla", and "infórmalo en la organización InnovaCC Core y solamente déjalo documentado para otro agente implementarlo". Specified in `inovacc-shared/specs`, `secrets/docs/spec/KEY-LIFECYCLE-v1.md` section 13 | Open: owner domain not decided; no contract and no code. The client side exists (`inovacc-shared/masterkey`). Detail below |
+| BL-003 | Load tests with a traffic injector: drive one component of an application at a stated load (rate or concurrency, ramp, duration) and measure its latency percentiles (p50, p95, p99, max), its errors by status and its throughput, per route, so that a release can be compared with the one before it. For every application that is tested, not only the Workers of this platform | Operator, 2026-11-15: "Algo que quiero adicionar al backlog es el uso de K6. Puede ser él, puede ser otro Vegeta, puede ser cualquier inyector de tráfico para estresar componentes y con eso medir el P99, P95 de la aplicación, de cualquier aplicación que sea probada" | Open: design not started; the injector is not chosen. Detail below |
 
 ## BL-002: the cloud copy of a master key
 
@@ -74,3 +75,35 @@ refused account gives `Unauthorized`). On the platform's side, each of these is 
 body of 118 bytes is refused; a second account cannot read the first one's copy; a token without the scope is
 refused; deleting the account removes the copy; after a `stage` with no `commit`, `current` still returns the
 previous copy.
+
+## BL-003: load tests and latency percentiles
+
+Written for the agent that will design it. Nothing here is an order: work starts on the operator's go.
+
+**What it measures.** A run sends a stated load to one component and records, per route: the latency at p50, p95,
+p99 and the maximum, the requests answered per second, and the count of each status. Two runs of the same profile on
+two releases can be compared. A route can carry a budget (for example p95 under a stated number of milliseconds) and a
+run that exceeds it fails.
+
+**The injector is not chosen.** The operator named k6 and Vegeta and accepts any injector. k6 describes a scenario in
+code and checks budgets with thresholds such as `http_req_duration: ['p(95)<200']`. Vegeta is a Go command that sends
+at a fixed rate from a list of targets, and its report gives the mean, p50, p90, p95, p99 and maximum latency. The
+choice is the first decision.
+
+**Points the design has to settle:**
+
+1. Where a load profile lives. It belongs to the application it tests, in that repository, reviewed like its tests.
+   It is never a script kept outside the product (the operator's rule of 2026-11-14, "the application does the work").
+2. Who runs it: a workflow started by hand, a step of a release, or one of the operator's tools. The answer decides
+   where the results are kept.
+3. Only LAB, or an equivalent test copy of the application. Production is never loaded without an approved GMUD.
+4. The platform's own brakes answer `429` under load: 600 requests a minute for each credential holder on `data`, 10
+   writes a minute for one sync vault, and 10 reads a day for one master copy (`data/CONTRACT.md:220-226`). A profile
+   either spreads its load over several credentials or measures the brake on purpose, and says which.
+5. LAB's hosts sit behind Cloudflare Access, so the injector needs an Access service token.
+6. Money. Every request to a Worker, to R2 and to a Durable Object is billed. A run states its total request count
+   and its expected cost before it starts.
+7. Where the injector runs. A latency measured from one machine includes that machine's network. The run records
+   where it ran. The server side (the Workers' own timings) is read beside the client's percentiles.
+8. Products outside this platform (the `inovacc` desktop and server products). The same profile format and report
+   would apply to them; this row stays here until the owner is decided.
